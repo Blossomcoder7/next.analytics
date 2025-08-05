@@ -7,7 +7,6 @@ export async function getClientSig(
 ): Promise<{ sig: string; ip: string }> {
   const cookieStore = await cookies();
   let sig = cookieStore.get("visitor_id")?.value;
-
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0].trim()  || 
     "0.0.0.0";

@@ -16,8 +16,11 @@ export async function POST(req: NextRequest) {
     const { sig, ip } = await getClientSig(req);
     const now = new Date();
     const todayStart = new Date();
+    const query = {
+      $or: [{ sig }, ...(ip !== "0.0.0.0" ? [{ ip }] : [])],
+    };
     todayStart.setUTCHours(0, 0, 0, 0);
-    let daily = await DailyModel.findOne({ $or: [{ sig }, { ip }] });
+    let daily = await DailyModel.findOne(query);
     if (daily) {
       daily.isActive = true;
       daily.lastPing = now;
@@ -32,7 +35,7 @@ export async function POST(req: NextRequest) {
       });
       await daily.save();
     }
-    let lifetime = await VisitorModel.findOne({ $or: [{ sig }, { ip }] });
+    let lifetime = await VisitorModel.findOne(query);
     if (lifetime) {
       lifetime.isActive = true;
       await lifetime.save();
