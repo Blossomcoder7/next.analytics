@@ -21,11 +21,14 @@ import VisitorModel from "@/_db/_models/visitor";
  * @throws {Error} Throws an error if the statistics fetching fails.
  */
 
-export default async function getCustomStats(sig: string) {
+export default async function getCustomStats(sig: string, ip?: string) {
   try {
     const todayStart = new Date();
     todayStart.setUTCHours(0, 0, 0, 0);
     const dayStr = todayStart.toISOString().split("T")[0];
+    const queryOr = ip
+      ? { $or: [{ sig }, { ip }] }
+      : { sig }; 
     const [
       todaysCountDoc,
       lifetimeCountDoc,
@@ -35,20 +38,16 @@ export default async function getCustomStats(sig: string) {
     ] = await Promise.all([
       DailyCountModel.findOne({ day: dayStr }),
       lifeTimeCountModel.findOne({ _id: "lifetime" }),
-      DailyModel.findOne({ sig }),
-      VisitorModel.findOne({ sig }),
+      DailyModel.findOne(queryOr),
+      VisitorModel.findOne(queryOr),
       DailyModel.countDocuments({ isActive: true }),
     ]);
+
     const todaysCount = todaysCountDoc?.count ?? 0;
     const totalCount = lifetimeCountDoc?.count ?? 0;
     const dailyVisitIndex = dailyInfo?.visitingIndex ?? "";
     const lifetimeVisitIndex = lifetimeInfo?.lifeTimeVisitingIndex ?? "";
-    // console.log({
-    //   todaysCount,
-    //   totalCount,
-    //   dailyVisitIndex,
-    //   lifetimeVisitIndex,
-    // });
+
     return {
       fullStats: {
         todaysCountDoc,
@@ -69,3 +68,4 @@ export default async function getCustomStats(sig: string) {
     throw new Error("Failed to fetch custom stats");
   }
 }
+

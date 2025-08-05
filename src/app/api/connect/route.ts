@@ -13,11 +13,11 @@ export async function POST(req: NextRequest) {
   if (corsHeaders instanceof NextResponse) return corsHeaders;
   try {
     await connectDb();
-    const { sig, setCookie } = await getClientSig(req);
+    const { sig, ip } = await getClientSig(req);
     const now = new Date();
     const todayStart = new Date();
     todayStart.setUTCHours(0, 0, 0, 0);
-    let daily = await DailyModel.findOne({ sig });
+    let daily = await DailyModel.findOne({ $or: [{ sig }, { ip }] });
     if (daily) {
       daily.isActive = true;
       daily.lastPing = now;
@@ -25,19 +25,21 @@ export async function POST(req: NextRequest) {
     } else {
       daily = new DailyModel({
         sig,
+        ip,
         firstVisit: now,
         isActive: true,
         lastPing: now,
       });
       await daily.save();
     }
-    let lifetime = await VisitorModel.findOne({ sig });
+    let lifetime = await VisitorModel.findOne({ $or: [{ sig }, { ip }] });
     if (lifetime) {
       lifetime.isActive = true;
       await lifetime.save();
     } else {
       lifetime = new VisitorModel({
         sig,
+        ip,
         firstVisit: now,
         isActive: true,
       });
@@ -74,7 +76,7 @@ export async function POST(req: NextRequest) {
         headers: corsHeaders,
       }
     );
-    if (setCookie) {
+    if (sig) {
       res.cookies.set("visitor_id", sig, {
         path: "/",
         maxAge: 60 * 60 * 24 * 365 * 10 * 10 * 10,

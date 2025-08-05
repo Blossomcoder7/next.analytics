@@ -20,6 +20,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(req: NextRequest) {
   const corsHeaders = await handleCors(req);
   if (corsHeaders instanceof NextResponse) return corsHeaders;
+
   try {
     const incomingKey = req.headers.get("x-stats-access-key");
     const expectedKey = process.env.STATS_API_KEY!;
@@ -29,8 +30,8 @@ export async function GET(req: NextRequest) {
         { status: 401, headers: corsHeaders }
       );
     }
-    const sig = await getClientSig(req);
-    const resObj = await getCustomStats(sig.sig);
+    const { sig, ip } = await getClientSig(req);
+    const resObj = await getCustomStats(sig, ip);
     if (resObj) {
       return NextResponse.json(
         {
@@ -44,6 +45,11 @@ export async function GET(req: NextRequest) {
         }
       );
     }
+
+    return NextResponse.json(
+      { success: false, error: "No data found" },
+      { status: 404, headers: corsHeaders }
+    );
   } catch (err) {
     console.error("Connect error:", err);
     return NextResponse.json(

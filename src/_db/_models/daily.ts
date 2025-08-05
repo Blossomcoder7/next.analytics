@@ -6,6 +6,7 @@ const dailySchema = new Schema(
     firstVisit: { type: Date, default: Date.now },
     isActive: { type: Boolean, default: true },
     sig: { type: String, default: "" },
+    ip: { type: String, default: "" },
     lastPing: { type: Date, default: Date.now },
     visitingIndex: { type: String, default: undefined },
   },

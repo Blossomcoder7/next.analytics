@@ -5,6 +5,7 @@ const visitorSchema = new Schema(
   {
     firstVisit: { type: Date, default: undefined },
     sig: { type: String, default: "" },
+    ip: { type: String, default: "" },
     lifeTimeVisitingIndex: { type: String, default: undefined },
   },
   {
