@@ -5,6 +5,10 @@ import VisitorModel from "@/_db/_models/visitor";
 import DailyModel from "@/_db/_models/daily";
 import { getClientSig } from "@/_utils/getClientSig";
 import { handleCors } from "@/_middlewares/options";
+import {
+  dailyConnection,
+  lifeTimeVisitTracking,
+} from "@/_utils/trackingService";
 
 /**
  * Handles a POST request to connect the user.
@@ -36,52 +40,20 @@ export async function POST(req: NextRequest) {
       : {
           sig,
         };
-    const dailyResult = await DailyModel.collection.findOneAndUpdate(
-      query,
-      {
-        $set: {
-          isActive: true,
-          lastPing: now,
-        },
-        $setOnInsert: {
-          sig,
-          ip,
-          firstVisit: now,
-        },
-      },
-      { upsert: true, returnDocument: "after", includeResultMetadata: true }
-    );
-    console.log({ "raw resultd ": dailyResult });
-    const wasInsertedDaily = dailyResult?.lastErrorObject?.upserted;
-    let daily = dailyResult?.value;
-    if (wasInsertedDaily && daily) {
-      daily = await DailyModel.findOne(query);
-      await daily?.save();
-      daily = await DailyModel.findOne(query);
-    }
-    const lifetimeResult = await VisitorModel.collection.findOneAndUpdate(
-      query,
-      {
-        $setOnInsert: {
-          sig,
-          ip,
-          firstVisit: now,
-        },
-      },
-      { upsert: true, returnDocument: "after", includeResultMetadata: true }
-    );
-    console.log({
-      "raw result  ": lifetimeResult,
-    });
-    const wasInsertedLifetime = lifetimeResult?.lastErrorObject?.upserted;
-    let lifetime = lifetimeResult?.value;
-
-    if (wasInsertedLifetime && lifetime) {
-      lifetime = await VisitorModel.findOne(query);
-      await lifetime?.save();
-      lifetime = await VisitorModel.findOne(query);
-    }
-
+    const [lifetime, daily] = await Promise.all([
+      dailyConnection({
+        ip,
+        query,
+        sig,
+        now,
+      }),
+      lifeTimeVisitTracking({
+        ip,
+        query,
+        sig,
+        now,
+      }),
+    ]);
     const res = NextResponse.json(
       {
         success: true,
