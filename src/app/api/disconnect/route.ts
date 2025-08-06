@@ -6,17 +6,17 @@ import { handleCors } from "@/_middlewares/options";
 import DailyModel from "@/_db/_models/daily";
 
 export async function POST(req: NextRequest) {
+  console.log(`User has been disconnected trying logout...`);
   const corsHeaders = await handleCors(req);
   if (corsHeaders instanceof NextResponse) return corsHeaders;
   try {
     await connectDb();
     const { sig } = await getClientSig(req);
-    console.log({ sig });
     const dis = await DailyModel.updateOne(
       { sig },
       { $set: { isActive: false } }
     );
-    console.log({ dis });
+    console.log({ sig, dis });
     return NextResponse.json(
       { success: true },
       {
