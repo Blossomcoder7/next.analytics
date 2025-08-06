@@ -25,14 +25,19 @@ export async function POST(req: NextRequest) {
   if (corsHeaders instanceof NextResponse) return corsHeaders;
   try {
     await connectDb();
-    const { sig, ip } = await getClientSig(req);
-    let isNew = true;
+    const { sig, ip, isNew } = await getClientSig(req);
     const now = new Date();
     const todayStart = new Date();
     todayStart.setUTCHours(0, 0, 0, 0);
-    const query = {
-      $or: [{ sig }, { ip }],
-    };
+    const query = 
+    isNew
+      ? {
+          $or: [{ sig }, { ip }],
+        }
+      :
+       {
+          sig,
+        };
     const daily = await DailyModel.findOneAndUpdate(
       query,
       {
@@ -67,8 +72,6 @@ export async function POST(req: NextRequest) {
     );
     if (!lifetime.lifeTimeVisitingIndex) {
       await lifetime.save();
-    } else {
-      isNew = false;
     }
     const res = NextResponse.json(
       {
