@@ -16,11 +16,11 @@ const visitorSchema = new Schema(
 visitorSchema.pre("save", async function (next) {
   if (!this.lifeTimeVisitingIndex) {
     await new Promise((res) => setTimeout(res, Math.random() * 100 + 50));
-    const actualDocCount = await VisitorModel.countDocuments();
-    const counterDoc = await models?.visitor?.findOne({});
+    const actualDocCount = await models?.visitor?.countDocuments();
+    const counterDoc = await lifeTimeCountModel.findOne({});
     const currentCount = counterDoc ? counterDoc.count : 0;
     if (actualDocCount > currentCount) {
-      const updatedCounter = await models?.visitor?.findOneAndUpdate(
+      const updatedCounter = await lifeTimeCountModel?.findOneAndUpdate(
         {},
         { $inc: { count: 1 } },
         { new: true, upsert: true }
