@@ -5,8 +5,6 @@ import VisitorModel from "@/_db/_models/visitor";
 import DailyModel from "@/_db/_models/daily";
 import { getClientSig } from "@/_utils/getClientSig";
 import { handleCors } from "@/_middlewares/options";
-import DailyCountModel from "@/_db/_models/counters/dailyCount";
-import lifeTimeCountModel from "@/_db/_models/counters/lifeTimeCount";
 
 /**
  * Handles a POST request to connect the user.
@@ -31,59 +29,47 @@ export async function POST(req: NextRequest) {
     let isNew = true;
     const now = new Date();
     const todayStart = new Date();
-    const query = {
-      $or: [{ sig }, { ip }],
-    };
     todayStart.setUTCHours(0, 0, 0, 0);
-    let daily = await DailyModel.findOne(query);
-    if (daily) {
-      daily.isActive = true;
-      daily.lastPing = now;
-      await daily.save();
-    } else {
-      daily = new DailyModel({
-        sig,
-        ip,
-        firstVisit: now,
-        isActive: true,
-        lastPing: now,
-      });
+    const query = {
+      $or: [...(sig ? [{ sig }] : []), { ip }],
+    };
+    const daily = await DailyModel.findOneAndUpdate(
+      query,
+      {
+        $set: {
+          isActive: true,
+          lastPing: now,
+        },
+        $setOnInsert: {
+          sig,
+          ip,
+          firstVisit: now,
+        },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    if (!daily.visitingIndex) {
       await daily.save();
     }
-    let lifetime = await VisitorModel.findOne(query);
-    if (lifetime) {
-      lifetime.isActive = true;
+    const lifetime = await VisitorModel.findOneAndUpdate(
+      query,
+      {
+        $set: {
+          isActive: true,
+        },
+        $setOnInsert: {
+          sig,
+          ip,
+          firstVisit: now,
+        },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+    if (!lifetime.lifeTimeVisitingIndex) {
+      await lifetime.save();
+    } else {
       isNew = false;
-      await lifetime.save();
-    } else {
-      lifetime = new VisitorModel({
-        sig,
-        ip,
-        firstVisit: now,
-        isActive: true,
-      });
-      isNew = true;
-      await lifetime.save();
     }
-    console.log({ lifetime, daily });
-    const dayStr = todayStart.toISOString().split("T")[0];
-
-    const todaysCount = await DailyCountModel.find({ day: dayStr });
-    const totalCount = await lifeTimeCountModel.findOne({ _id: "lifetime" });
-
-    const lifetimeCount = await VisitorModel.countDocuments({
-      createdAt: { $lte: lifetime.createdAt },
-    });
-    const dailyCount = await DailyModel.countDocuments({
-      createdAt: { $gte: todayStart, $lte: daily.createdAt },
-    });
-    console.log({
-      lifetimeCount,
-      dailyCount,
-      sig,
-      todaysCount,
-      totalCount,
-    });
     const res = NextResponse.json(
       {
         success: true,
@@ -113,6 +99,7 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
 export async function OPTIONS(req: NextRequest) {
   return (await handleCors(req)) as NextResponse;
 }

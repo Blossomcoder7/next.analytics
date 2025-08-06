@@ -28,7 +28,6 @@ dailySchema.pre("save", async function (next) {
     );
     this.visitingIndex = `#${counterDoc.count.toString()}`;
   }
-
   next();
 });
 export const DailyModel =
