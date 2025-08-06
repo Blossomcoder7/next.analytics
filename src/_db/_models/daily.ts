@@ -17,7 +17,7 @@ const dailySchema = new Schema(
 
 dailySchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 }); // 24 hours TTL
 dailySchema.pre("save", async function (next) {
-  if (this.isNew && !this.visitingIndex) {
+  if (!this.visitingIndex) {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
     const dayStr = today.toISOString().split("T")[0]; // e.g. '2025-08-05'
