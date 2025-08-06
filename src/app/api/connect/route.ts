@@ -1,8 +1,6 @@
 // app/api/connect/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import connectDb from "@/_db/_utils/connection";
-import VisitorModel from "@/_db/_models/visitor";
-import DailyModel from "@/_db/_models/daily";
 import { getClientSig } from "@/_utils/getClientSig";
 import { handleCors } from "@/_middlewares/options";
 import {
