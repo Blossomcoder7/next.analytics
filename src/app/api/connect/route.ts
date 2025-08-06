@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     const todayStart = new Date();
     todayStart.setUTCHours(0, 0, 0, 0);
     const query = {
-      $and: [{ sig }, { ip }],
+      $or: [{ sig }, { ip }],
     };
     const daily = await DailyModel.findOneAndUpdate(
       query,
