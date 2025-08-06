@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   if (corsHeaders instanceof NextResponse) return corsHeaders;
   try {
     await connectDb();
-    const { sig, ip } = await getClientSig(req);
+    const { sig, ip, isNew } = await getClientSig(req);
     const now = new Date();
     const todayStart = new Date();
     const query = {
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
         headers: corsHeaders,
       }
     );
-    if (sig) {
+    if (isNew) {
       res.cookies.set("visitor_id", sig, {
         path: "/",
         maxAge: 60 * 60 * 24 * 365 * 10 * 10 * 10,
