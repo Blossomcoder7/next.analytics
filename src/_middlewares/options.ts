@@ -8,7 +8,6 @@ export async function handleCors(req: NextRequest) {
     allowed.includes("*") || (origin && allowed.includes(origin));
 
   const headers = {
-    ...req.headers,
     "Access-Control-Allow-Origin": isAllowed ? origin! : "null",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, x-stats-access-key",
