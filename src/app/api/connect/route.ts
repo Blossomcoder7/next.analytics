@@ -29,16 +29,14 @@ export async function POST(req: NextRequest) {
     const now = new Date();
     const todayStart = new Date();
     todayStart.setUTCHours(0, 0, 0, 0);
-    const query = 
-    isNew
+    const query = isNew
       ? {
           $or: [{ sig }, { ip }],
         }
-      :
-       {
+      : {
           sig,
         };
-    const daily = await DailyModel.findOneAndUpdate(
+    let daily = await DailyModel.findOneAndUpdate(
       query,
       {
         $set: {
@@ -53,15 +51,13 @@ export async function POST(req: NextRequest) {
       },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
-    if (!daily.visitingIndex) {
+    if (daily && !daily.visitingIndex) {
       await daily.save();
+      daily = await DailyModel.findOne(query);
     }
-    const lifetime = await VisitorModel.findOneAndUpdate(
+    let lifetime = await VisitorModel.findOneAndUpdate(
       query,
       {
-        $set: {
-          isActive: true,
-        },
         $setOnInsert: {
           sig,
           ip,
@@ -70,8 +66,9 @@ export async function POST(req: NextRequest) {
       },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
-    if (!lifetime.lifeTimeVisitingIndex) {
+    if (lifetime && !lifetime.lifeTimeVisitingIndex) {
       await lifetime.save();
+      lifetime = await VisitorModel.findOne(query);
     }
     const res = NextResponse.json(
       {

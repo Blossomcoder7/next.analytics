@@ -19,7 +19,7 @@ visitorSchema.pre("save", async function (next) {
     const actualDocCount = await models?.visitor?.countDocuments();
     const counterDoc = await lifeTimeCountModel.findOne({});
     const currentCount = counterDoc ? counterDoc.count : 0;
-    if (actualDocCount > currentCount) {
+    if (actualDocCount > currentCount || !counterDoc) {
       const updatedCounter = await lifeTimeCountModel?.findOneAndUpdate(
         {},
         { $inc: { count: 1 } },

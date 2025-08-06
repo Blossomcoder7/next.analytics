@@ -27,7 +27,7 @@ dailySchema.pre("save", async function (next) {
     });
     const counterDoc = await DailyCountModel.findOne({ day: dayStr });
     const currentCount = counterDoc ? counterDoc.count : 0;
-    if (actualDocCount > currentCount) {
+    if (actualDocCount > currentCount || !counterDoc) {
       const updatedCounter = await DailyCountModel.findOneAndUpdate(
         { day: dayStr },
         { $inc: { count: 1 }, $setOnInsert: { dated: today } },
