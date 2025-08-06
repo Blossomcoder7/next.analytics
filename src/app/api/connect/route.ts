@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       : {
           sig,
         };
-    let daily = await DailyModel.findOneAndUpdate(
+    const dailyResult = await DailyModel.findOneAndUpdate(
       query,
       {
         $set: {
@@ -49,13 +49,15 @@ export async function POST(req: NextRequest) {
           firstVisit: now,
         },
       },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, new: true, setDefaultsOnInsert: true, rawResult: true }
     );
-    if (daily && !daily.visitingIndex) {
+    const wasInsertedDaily = dailyResult?.lastErrorObject?.upserted;
+    let daily = dailyResult.value;
+    if (wasInsertedDaily && daily) {
       await daily.save();
       daily = await DailyModel.findOne(query);
     }
-    let lifetime = await VisitorModel.findOneAndUpdate(
+    const lifetimeResult = await VisitorModel.findOneAndUpdate(
       query,
       {
         $setOnInsert: {
@@ -64,12 +66,17 @@ export async function POST(req: NextRequest) {
           firstVisit: now,
         },
       },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { upsert: true, new: true, setDefaultsOnInsert: true, rawResult: true }
     );
-    if (lifetime && !lifetime.lifeTimeVisitingIndex) {
+
+    const wasInsertedLifetime = lifetimeResult?.lastErrorObject?.upserted;
+    let lifetime = lifetimeResult.value;
+
+    if (wasInsertedLifetime && lifetime) {
       await lifetime.save();
       lifetime = await VisitorModel.findOne(query);
     }
+
     const res = NextResponse.json(
       {
         success: true,
