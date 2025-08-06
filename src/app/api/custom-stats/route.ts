@@ -1,5 +1,6 @@
 import getCustomStats from "@/_functions/getCustomStats";
 import { handleCors } from "@/_middlewares/options";
+import cron from "@/_services/cron";
 import { getClientSig } from "@/_utils/getClientSig";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -17,10 +18,9 @@ import { NextRequest, NextResponse } from "next/server";
  * statistics or an error message.
  */
 
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
   const corsHeaders = await handleCors(req);
   if (corsHeaders instanceof NextResponse) return corsHeaders;
-
   try {
     const incomingKey = req.headers.get("x-stats-access-key");
     const expectedKey = process.env.STATS_API_KEY!;
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
         }
       );
     }
-
+    cron();
     return NextResponse.json(
       { success: false, error: "No data found" },
       { status: 404, headers: corsHeaders }

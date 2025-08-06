@@ -1,11 +1,13 @@
 import getStats from "@/_functions/getStats";
 import { handleCors } from "@/_middlewares/options";
+import cron from "@/_services/cron";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   const corsHeaders = await handleCors(req);
   if (corsHeaders instanceof NextResponse) return corsHeaders;
   try {
+    cron();
     const incomingKey = req.headers.get("x-stats-access-key");
     const expectedKey = process.env.STATS_API_KEY!;
 

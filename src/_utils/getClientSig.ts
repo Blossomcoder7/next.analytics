@@ -8,10 +8,11 @@ export async function getClientSig(
 ): Promise<{ sig: string; ip: string }> {
   const cookieStore = await cookies();
   let sig = cookieStore.get("visitor_id")?.value;
-  const parsedBody = await parseBody(req);
+  const p = await parseBody(req);
+  const parsedBody = p ? JSON.parse(p) : {};
   const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
     parsedBody?.ip ||
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
     "0.0.0.0";
   console.log({
     sig,

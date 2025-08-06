@@ -14,18 +14,24 @@ const getGA4Data = async () => {
   return stats;
 };
 const getCustomStatsData = async () => {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/custom-stats`,
-    {
-      cache: "no-store",
-      headers: {
-        "x-stats-access-key": process.env.STATS_API_KEY!,
-      },
-    }
-  );
-  const { data } = await res.json();
-  console.log({ data });
-  return data;
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL!}/api/custom-stats`,
+      {
+        method: "post",
+        cache: "no-store",
+        headers: {
+          "x-stats-access-key": process.env.STATS_API_KEY!,
+        },
+        body: JSON.stringify({ ip: "0.0.0.0" }),
+      }
+    );
+    const { data } = await res.json();
+    console.log({ data });
+    return data;
+  } catch (error) {
+    console.log(`Error while getting the Custom Stats`, error);
+  }
 };
 
 const Page = async () => {
@@ -43,7 +49,9 @@ const Page = async () => {
           </h1>
           <p className="text-white/60 text-lg">Powered by NEXT.JS</p>
           <p className="text-white/20 text-xs mt-1">© 2025 Next.Analytics</p>
-          <p className="text-white/20 text-[0.6rem] mt-1">All rights reserved.</p>
+          <p className="text-white/20 text-[0.6rem] mt-1">
+            All rights reserved.
+          </p>
         </div>
 
         {/* ga4Stats Grid */}
