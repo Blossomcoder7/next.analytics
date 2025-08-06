@@ -18,29 +18,18 @@ const dailySchema = new Schema(
 dailySchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 }); // 24 hours TTL
 dailySchema.pre("save", async function (next) {
   if (!this.visitingIndex) {
-    await new Promise((res) => setTimeout(res, Math.random() * 100 + 50));
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
-    const dayStr = today.toISOString().split("T")[0];
-    const actualDocCount = await models?.daily?.countDocuments({
-      createdAt: { $gte: today },
-    });
-    const counterDoc = await DailyCountModel.findOne({ day: dayStr });
-    const currentCount = counterDoc ? counterDoc.count : 0;
-    if (actualDocCount > currentCount || !counterDoc) {
-      const updatedCounter = await DailyCountModel.findOneAndUpdate(
-        { day: dayStr },
-        { $inc: { count: 1 }, $setOnInsert: { dated: today } },
-        { new: true, upsert: true }
-      );
-      this.visitingIndex = `#${updatedCounter.count.toString()}`;
-    } else {
-      this.visitingIndex = `#${currentCount}`;
-    }
+    const dayStr = today.toISOString().split("T")[0]; // e.g. '2025-08-05'
+    const counterDoc = await DailyCountModel.findOneAndUpdate(
+      { day: dayStr },
+      { $inc: { count: 1 }, $setOnInsert: { dated: today } },
+      { new: true, upsert: true }
+    );
+    this.visitingIndex = `#${counterDoc.count.toString()}`;
   }
   next();
 });
-
 export const DailyModel =
   models.daily || model("daily", dailySchema, "dailies");
 

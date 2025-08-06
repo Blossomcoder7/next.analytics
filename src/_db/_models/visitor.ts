@@ -15,20 +15,12 @@ const visitorSchema = new Schema(
 
 visitorSchema.pre("save", async function (next) {
   if (!this.lifeTimeVisitingIndex) {
-    await new Promise((res) => setTimeout(res, Math.random() * 100 + 50));
-    const actualDocCount = await models?.visitor?.countDocuments();
-    const counterDoc = await lifeTimeCountModel.findOne({});
-    const currentCount = counterDoc ? counterDoc.count : 0;
-    if (actualDocCount > currentCount || !counterDoc) {
-      const updatedCounter = await lifeTimeCountModel?.findOneAndUpdate(
-        {},
-        { $inc: { count: 1 } },
-        { new: true, upsert: true }
-      );
-      this.lifeTimeVisitingIndex = `#${updatedCounter.count.toString()}`;
-    } else {
-      this.lifeTimeVisitingIndex = `#${currentCount}`;
-    }
+    const counterDoc = await lifeTimeCountModel.findOneAndUpdate(
+      {},
+      { $inc: { count: 1 } },
+      { new: true, upsert: true }
+    );
+    this.lifeTimeVisitingIndex = `#${counterDoc.count.toString()}`;
   }
   next();
 });

@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       : {
           sig,
         };
-    const dailyResult = await DailyModel.findOneAndUpdate(
+    const dailyResult = await DailyModel.collection.findOneAndUpdate(
       query,
       {
         $set: {
@@ -49,15 +49,17 @@ export async function POST(req: NextRequest) {
           firstVisit: now,
         },
       },
-      { upsert: true, new: true, setDefaultsOnInsert: true, rawResult: true }
+      { upsert: true, returnDocument: "after", includeResultMetadata: true }
     );
+    console.log({ "raw resultd ": dailyResult });
     const wasInsertedDaily = dailyResult?.lastErrorObject?.upserted;
-    let daily = dailyResult.value;
+    let daily = dailyResult?.value;
     if (wasInsertedDaily && daily) {
-      await daily.save();
+      daily = await DailyModel.findOne(query);
+      await daily?.save();
       daily = await DailyModel.findOne(query);
     }
-    const lifetimeResult = await VisitorModel.findOneAndUpdate(
+    const lifetimeResult = await VisitorModel.collection.findOneAndUpdate(
       query,
       {
         $setOnInsert: {
@@ -66,14 +68,17 @@ export async function POST(req: NextRequest) {
           firstVisit: now,
         },
       },
-      { upsert: true, new: true, setDefaultsOnInsert: true, rawResult: true }
+      { upsert: true, returnDocument: "after", includeResultMetadata: true }
     );
-
+    console.log({
+      "raw result  ": lifetimeResult,
+    });
     const wasInsertedLifetime = lifetimeResult?.lastErrorObject?.upserted;
-    let lifetime = lifetimeResult.value;
+    let lifetime = lifetimeResult?.value;
 
     if (wasInsertedLifetime && lifetime) {
-      await lifetime.save();
+      lifetime = await VisitorModel.findOne(query);
+      await lifetime?.save();
       lifetime = await VisitorModel.findOne(query);
     }
 
