@@ -2,11 +2,11 @@
   "crons": [
     {
       "path": "/api/check-idle",
-      "schedule": "0 10 * * *"
+      "schedule": "*/1 * * * *"
     },
     {
       "path": "/api/update-ga",
-      "schedule": "0 10 * * *"
+      "schedule": "*/1 * * * *"
     }
   ]
 }
