@@ -11,11 +11,11 @@ export async function POST(req: NextRequest) {
   if (corsHeaders instanceof NextResponse) return corsHeaders;
   try {
     await connectDb();
-    const { sig } = await getClientSig(req);
-    const dis = await DailyModel.updateOne(
-      { sig },
-      { $set: { isActive: false } }
-    );
+    const { sig, ip } = await getClientSig(req);
+    const query = { $or: [{ ip }, { sig }] };
+    const dis = await DailyModel.updateOne(query, {
+      $set: { isActive: false },
+    });
     console.log({ sig, dis });
     return NextResponse.json(
       { success: true },
