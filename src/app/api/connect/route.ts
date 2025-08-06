@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     const now = new Date();
     const todayStart = new Date();
     const query = {
-      $or: [{ sig }, ...(ip !== "0.0.0.0" ? [{ ip }] : [])],
+      $or: [{ sig }, { ip }],
     };
     todayStart.setUTCHours(0, 0, 0, 0);
     let daily = await DailyModel.findOne(query);
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
         firstVisit: now,
         isActive: true,
       });
-      isNew=true
+      isNew = true;
       await lifetime.save();
     }
     console.log({ lifetime, daily });
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
       res.cookies.set("visitor_id", sig, {
         path: "/",
         maxAge: 60 * 60 * 24 * 365 * 10 * 10 * 10,
-        sameSite: "strict",
+        sameSite: "none",
       });
     }
     return res;
