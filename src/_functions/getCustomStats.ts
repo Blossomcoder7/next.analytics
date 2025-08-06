@@ -27,7 +27,7 @@ export default async function getCustomStats(sig: string, ip?: string) {
     todayStart.setUTCHours(0, 0, 0, 0);
     const dayStr = todayStart.toISOString().split("T")[0];
     const queryOr = ip
-      ? { $or: [{ sig }, { ip }] }
+      ? { $and: [{ sig }, { ip }] }
       : { sig }; 
     const [
       todaysCountDoc,
