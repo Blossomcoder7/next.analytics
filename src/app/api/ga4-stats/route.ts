@@ -7,7 +7,6 @@ export async function GET(req: NextRequest) {
   const corsHeaders = await handleCors(req);
   if (corsHeaders instanceof NextResponse) return corsHeaders;
   try {
-    cron();
     const incomingKey = req.headers.get("x-stats-access-key");
     const expectedKey = process.env.STATS_API_KEY!;
 
@@ -32,6 +31,7 @@ export async function GET(req: NextRequest) {
       );
     }
     // console.log({ result });
+
     const data = {
       totalVisitsTillDate: result?.data?.totalVisitsTillDate ?? 0,
       visitsLast24Hours: result?.data?.visitsLast24Hours ?? 0,
@@ -41,6 +41,7 @@ export async function GET(req: NextRequest) {
       createdAt: result?.data?.createdAt ?? 0,
       updatedAt: result?.data?.updatedAt ?? 0,
     };
+    cron();
     // console.log({ data });
     return NextResponse.json(
       { success: true, stats: data },
