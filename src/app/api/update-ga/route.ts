@@ -1,10 +1,18 @@
 import ReportModel from "@/_db/_models/report";
 import connectDb from "@/_db/_utils/connection";
 import { fetchAnalytics } from "@/_functions/fetch";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    if (
+      req.headers.get("Authorization") !== `Bearer ${process.env.CRON_SECRET}`
+    ) {
+      return NextResponse.json(
+        { success: false, ok: false, message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
     await connectDb();
     const stats = await fetchAnalytics();
     await ReportModel.updateOne(
@@ -22,7 +30,7 @@ export async function GET() {
     );
     console.log(`Updated The cache at ${new Date().toLocaleDateString()}`);
     return NextResponse.json(
-      { success: true, message: "Updated Successfully" },
+      { success: true, ok: true, message: "Updated Successfully" },
       { status: 200 }
     );
   } catch (err) {

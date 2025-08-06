@@ -1,6 +1,6 @@
 import connectDb from "@/_db/_utils/connection";
 import DailyModel from "@/_db/_models/daily";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 async function expireInactiveUsers() {
   await connectDb();
@@ -18,10 +18,18 @@ async function expireInactiveUsers() {
   console.log(`Marked ${result.modifiedCount} daily users as inactive.`);
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (
+    req.headers.get("Authorization") !== `Bearer ${process.env.CRON_SECRET}`
+  ) {
+    return NextResponse.json(
+      { success: false, ok: false, message: "Unauthorized" },
+      { status: 401 }
+    );
+  }
   await expireInactiveUsers();
   return NextResponse.json(
-    { success: true, message: "Updated" },
+    { success: true, message: "Updated", ok: true },
     { status: 200 }
   );
 }

@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/check-idle",
+      "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/update-ga",
+      "schedule": "0 10 * * *"
+    }
+  ]
+}
