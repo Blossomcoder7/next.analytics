@@ -27,7 +27,8 @@ export async function POST(req: NextRequest) {
   if (corsHeaders instanceof NextResponse) return corsHeaders;
   try {
     await connectDb();
-    const { sig, ip, isNew } = await getClientSig(req);
+    const { sig, ip } = await getClientSig(req);
+    let isNew = true;
     const now = new Date();
     const todayStart = new Date();
     const query = {
@@ -52,6 +53,7 @@ export async function POST(req: NextRequest) {
     let lifetime = await VisitorModel.findOne(query);
     if (lifetime) {
       lifetime.isActive = true;
+      isNew = false;
       await lifetime.save();
     } else {
       lifetime = new VisitorModel({
@@ -60,6 +62,7 @@ export async function POST(req: NextRequest) {
         firstVisit: now,
         isActive: true,
       });
+      isNew=true
       await lifetime.save();
     }
     console.log({ lifetime, daily });

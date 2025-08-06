@@ -5,8 +5,8 @@ import parseBody from "./parseBody";
 
 export async function getClientSig(
   req: NextRequest
-): Promise<{ sig: string; ip: string; isNew: boolean }> {
-  const cookieStore = await cookies(); 
+): Promise<{ sig: string; ip: string }> {
+  const cookieStore = await cookies();
   let sig = cookieStore.get("visitor_id")?.value;
   const p = await parseBody(req);
   const parsedBody = p ? JSON.parse(p) : {};
@@ -14,9 +14,8 @@ export async function getClientSig(
     parsedBody?.ip ||
     req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
     "0.0.0.0";
-  const isNew = !sig;
   if (!sig) {
     sig = `${ip}_${randomUUID()}`;
   }
-  return { sig, ip, isNew };
+  return { sig, ip };
 }
