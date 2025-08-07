@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
           success: false,
           message: "Request Incomplete, Need to retry",
           retry: true,
+          sig,
         },
         {
           status: 200,

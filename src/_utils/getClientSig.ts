@@ -7,10 +7,12 @@ export async function getClientSig(
   req: NextRequest
 ): Promise<{ sig: string; ip: string; isNew: boolean }> {
   const cookieStore = await cookies();
-  let sig = cookieStore.get("visitor_id")?.value;
-  const isNew = sig === undefined || !sig;
   const p = await parseBody(req);
   const parsedBody = p ? JSON.parse(p) : {};
+  const cookieSig = cookieStore.get("visitor_id")?.value;
+  const localSig = parsedBody?.sig;
+  let sig = cookieSig || localSig;
+  const isNew = !sig;
   const ip =
     parsedBody?.ip ||
     req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
