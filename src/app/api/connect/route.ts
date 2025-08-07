@@ -28,6 +28,26 @@ export async function POST(req: NextRequest) {
   try {
     await connectDb();
     const { sig, ip, isNew } = await getClientSig(req);
+    if (isNew) {
+      const response = NextResponse.json(
+        {
+          ok: false,
+          success: false,
+          message: "Request Incomplete, Need to retry",
+          retry: true,
+        },
+        {
+          status: 200,
+        }
+      );
+      response.cookies.set("visitor_id", sig, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 365 * 10 * 10 * 10,
+        sameSite: "none",
+        secure: true,
+      });
+      return response;
+    }
     const now = new Date();
     const todayStart = new Date();
     todayStart.setUTCHours(0, 0, 0, 0);
@@ -64,14 +84,6 @@ export async function POST(req: NextRequest) {
         headers: corsHeaders,
       }
     );
-    if (isNew) {
-      res.cookies.set("visitor_id", sig, {
-        path: "/",
-        maxAge: 60 * 60 * 24 * 365 * 10 * 10 * 10,
-        sameSite: "none",
-        secure: true,
-      });
-    }
     return res;
   } catch (err) {
     console.error("Connect error:", err);
